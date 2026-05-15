@@ -1,0 +1,26 @@
+{
+  "name": "@workspace/discord-bot",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node --enable-source-maps dist/index.js",
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "deploy-commands": "tsx src/deploy-commands.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@discordjs/rest": "^2.3.0",
+    "@napi-rs/canvas": "^1.0.0",
+    "bwip-js": "^4.5.1",
+    "discord.js": "^14.15.3",
+    "noblox.js": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/bwip-js": "^3.2.3",
+    "@types/node": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "^5.9.2"
+  }
+}
