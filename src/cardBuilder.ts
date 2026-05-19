@@ -1,11 +1,9 @@
 import { createCanvas, loadImage, type SKRSContext2D } from "@napi-rs/canvas";
-import bwipjs from "bwip-js";
 
 // ── Paleta ───────────────────────────────────────────────────────────────────
 export const NAVY = "#1a3560";
 export const GOLD = "#c8a030";
 export const BEIGE = "#e5dab8";
-export const TEXT = "#1a3560";
 export const WHITE = "#ffffff";
 
 const W = 900;
@@ -14,6 +12,7 @@ const H = 540;
 // ── Utilidades ────────────────────────────────────────────────────────────────
 function calcAge(dateStr: string): number {
   const parts = dateStr.split("/");
+
   if (parts.length !== 3) return 0;
 
   const [d, m, y] = parts.map(Number);
@@ -73,7 +72,6 @@ function drawHeader(ctx: SKRSContext2D, subtitle: string) {
   ctx.textAlign = "right";
 
   ctx.font = "bold 50px Arial";
-  ctx.fillStyle = WHITE;
   ctx.fillText("BUENOS AIRES", W - 24, 58);
 
   ctx.font = "bold 15px Arial";
@@ -92,7 +90,6 @@ function drawFooter(ctx: SKRSContext2D, fullName: string) {
 
   ctx.fillStyle = WHITE;
   ctx.font = "bold 20px Arial";
-  ctx.textAlign = "left";
 
   ctx.fillText(fullName.toUpperCase(), 22, H - 18);
 
@@ -108,7 +105,6 @@ function drawFooter(ctx: SKRSContext2D, fullName: string) {
   ctx.fillStyle = NAVY;
   ctx.font = "bold 22px Arial";
   ctx.textAlign = "center";
-
   ctx.fillText("BA", ox, oy + 27);
 
   ctx.textAlign = "left";
@@ -125,24 +121,28 @@ function goldBrackets(
   ctx.strokeStyle = GOLD;
   ctx.lineWidth = 3;
 
+  // top-left
   ctx.beginPath();
   ctx.moveTo(x + len, y);
   ctx.lineTo(x, y);
   ctx.lineTo(x, y + len);
   ctx.stroke();
 
+  // top-right
   ctx.beginPath();
   ctx.moveTo(x + w - len, y);
   ctx.lineTo(x + w, y);
   ctx.lineTo(x + w, y + len);
   ctx.stroke();
 
+  // bottom-left
   ctx.beginPath();
   ctx.moveTo(x, y + h - len);
   ctx.lineTo(x, y + h);
   ctx.lineTo(x + len, y + h);
   ctx.stroke();
 
+  // bottom-right
   ctx.beginPath();
   ctx.moveTo(x + w - len, y + h);
   ctx.lineTo(x + w, y + h);
@@ -187,7 +187,7 @@ async function getAvatarUrl(robloxId: number): Promise<string> {
   }
 }
 
-// ── PARTE DELANTERA ───────────────────────────────────────────────────────────
+// ── INTERFACE ─────────────────────────────────────────────────────────────────
 export interface CardOptions {
   primerNombre: string;
   segundoNombre: string;
@@ -200,6 +200,7 @@ export interface CardOptions {
   robloxUsername: string;
 }
 
+// ── DNI FRONTAL ───────────────────────────────────────────────────────────────
 export async function buildFront(opts: CardOptions): Promise<Buffer> {
   const {
     primerNombre,
@@ -212,25 +213,28 @@ export async function buildFront(opts: CardOptions): Promise<Buffer> {
     robloxUsername,
   } = opts;
 
-  const fullName = `${primerNombre}${
-    segundoNombre ? " " + segundoNombre : ""
-  } ${primerApellido}${
-    segundoApellido ? " " + segundoApellido : ""
-  }`;
+  const fullName =
+    `${primerNombre}` +
+    `${segundoNombre ? " " + segundoNombre : ""} ` +
+    `${primerApellido}` +
+    `${segundoApellido ? " " + segundoApellido : ""}`;
 
   const age = calcAge(fechaNacimiento);
 
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext("2d");
 
+  // Fondo
   ctx.fillStyle = BEIGE;
   ctx.fillRect(0, 0, W, H);
 
   diagonalPattern(ctx, 0, 96, W, H - 96 - 52);
 
+  // Header/Footer
   drawHeader(ctx, "TARJETA DE IDENTIFICACIÓN");
   drawFooter(ctx, fullName);
 
+  // ── Avatar ────────────────────────────────────────────────────────────────
   const AX = 18;
   const AY = 108;
   const AW = 262;
@@ -259,12 +263,22 @@ export async function buildFront(opts: CardOptions): Promise<Buffer> {
 
   goldBrackets(ctx, AX, AY, AW, AH);
 
+  // ── Datos ─────────────────────────────────────────────────────────────────
   const FX = 302;
 
   let fy = 118;
   const gap = 14;
 
-  fy = fieldRow(ctx, "NOMBRE COMPLETO", fullName, FX, fy, 10, 26) + gap;
+  fy =
+    fieldRow(
+      ctx,
+      "NOMBRE COMPLETO",
+      fullName,
+      FX,
+      fy,
+      10,
+      26
+    ) + gap;
 
   fy =
     fieldRow(
@@ -277,10 +291,27 @@ export async function buildFront(opts: CardOptions): Promise<Buffer> {
       22
     ) + gap;
 
-  fy = fieldRow(ctx, "EDAD", `${age} años`, FX, fy, 10, 22) + gap;
+  fy =
+    fieldRow(
+      ctx,
+      "EDAD",
+      `${age} años`,
+      FX,
+      fy,
+      10,
+      22
+    ) + gap;
 
   fy =
-    fieldRow(ctx, "NACIONALIDAD", nacionalidad, FX, fy, 10, 22) + gap;
+    fieldRow(
+      ctx,
+      "NACIONALIDAD",
+      nacionalidad,
+      FX,
+      fy,
+      10,
+      22
+    ) + gap;
 
   fy =
     fieldRow(
@@ -302,20 +333,6 @@ export async function buildFront(opts: CardOptions): Promise<Buffer> {
     10,
     22
   );
-
-  ctx.strokeStyle = "rgba(100,114,196,0.25)";
-  ctx.lineWidth = 1;
-
-  let lineY = 148;
-
-  for (let i = 0; i < 5; i++) {
-    ctx.beginPath();
-    ctx.moveTo(FX, lineY);
-    ctx.lineTo(W - 18, lineY);
-    ctx.stroke();
-
-    lineY += 72;
-  }
 
   return canvas.encode("png");
 }
